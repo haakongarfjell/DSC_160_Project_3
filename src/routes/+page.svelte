@@ -1,1 +1,5 @@
-<h1>Project 3 - Vikings</h1>
+<script>
+    import App from '../components/App.svelte';
+</script>
+
+<App />
