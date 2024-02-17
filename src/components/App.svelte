@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import * as d3 from 'd3';
+
   
     let svg;
     let width;
@@ -12,14 +13,20 @@
     let colorScale;
     let weightPop = 0.5;
     let weightHDI = 0.5;
+    let weightTemp = 0.5;
+
     let populationData;
     let HDIdata;
+    let temperatureData;
 
     let minHDI;
     let maxHDI;
 
     let minPop;
     let maxPop;
+
+    let minTemp;
+    let maxTemp;
 
 
   
@@ -34,22 +41,24 @@
     
         path = d3.geoPath().projection(projection);
     
-        colorScale = d3.scaleThreshold()
-            .domain([0.3, 0.5, 0.6, 0.7, 0.8, 1.0])
-            .range(d3.schemeBlues[7]);
+        colorScale = d3.scaleSequential()
+          .domain([0, 1]) // Define the domain as the range of values your data can take
+          .interpolator(d3.interpolateBlues);
     
         const tooltip = d3.select("body").append("div")
             .attr("class", "tooltip")
             .style("opacity", 0);
     
-        const [topoData, popData, HDIdataCsv ] = await Promise.all([
+        const [topoData, popData, HDIdataCsv, tempData ] = await Promise.all([
             d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
             d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_population.csv"),
-            d3.csv("HDIdata.csv")
+            d3.csv("HDIdata.csv"),
+            d3.csv("Avg_World_Temp_2020.csv")
         ]);
     
         populationData = new Map(popData.map(d => [d.code, +d.pop]));
         HDIdata = new Map(HDIdataCsv.map(d => [d.code, +d.hdi]));
+        temperatureData = await loadTemperatureData(tempData);
     
 
         minHDI = d3.min(HDIdataCsv, d => +d.hdi) + 0.01;
@@ -57,6 +66,9 @@
 
         minPop = d3.min(popData, d => +d.pop);
         maxPop = d3.max(popData, d => +d.pop);
+
+        minTemp = d3.min(tempData, d => +d.Avg_Year);
+        maxTemp = d3.max(tempData, d => +d.Avg_Year);
 
         
         svg.attr("width", width)
@@ -73,8 +85,45 @@
             weightHDI = +this.value;
             updateMap(topoData);
         });
+
+        d3.select("#thirdDataSlider").on("input", function () {
+            weightTemp = +this.value;
+            updateMap(topoData);
+        });
     });
-  
+
+    async function loadTemperatureData(data) {
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        console.error("Data is invalid or empty.");
+        return null;
+      }
+
+      // Group data by country
+      const groupedData = data.reduce((acc, currentValue) => {
+          const country = currentValue.Country;
+          const avgYear = +currentValue.Avg_Year;
+
+          // If the country is not in the accumulator yet, add it
+          if (!acc.has(country)) {
+              acc.set(country, []);
+          }
+
+          // Push the average temperature to the array for the country
+          acc.get(country).push(avgYear);
+
+          return acc;
+      }, new Map());
+
+      // Calculate the average temperature for each country
+      const selectedData = new Map();
+      groupedData.forEach((temperatures, country) => {
+          const avgTemperature = temperatures.reduce((total, temp) => total + temp, 0) / temperatures.length;
+          selectedData.set(country, avgTemperature);
+      });
+
+      return selectedData;
+    }
+
     function updateMap(topo) {
         svg.selectAll(".country").remove();
 
@@ -86,12 +135,13 @@
             .style("fill", function (d) {
             const population = populationData.get(d.id) || 0;
             const hdi = HDIdata.get(d.id) || 0;
+            const temperature = temperatureData.get(d.properties.name) || 0;
 
             const normalizedPopulation = (population - minPop) / (maxPop - minPop);
-            const normalizedHDI = (hdi - minHDI) / (maxHDI - minHDI);
+            const normalizedHDI = hdi === 0 ? 0 : (hdi - minHDI) / (maxHDI - minHDI);
+            const normalizedTemperature = (temperature - minTemp) / (maxTemp - minTemp);
 
-            // Apply equal weights to normalized values
-            const weightedValue = (weightPop - 0.5*weightHDI) * normalizedPopulation + (weightHDI - 0.5*weightPop) * normalizedHDI;
+            const weightedValue = (weightPop - 0.33*weightHDI - 0.33*weightTemp) * normalizedPopulation + (weightHDI - 0.33*weightPop - 0.33*weightTemp) * normalizedHDI + (weightTemp - 0.33*weightPop - 0.33*weightHDI) * normalizedTemperature;
 
             return colorScale(weightedValue);
             })
@@ -109,12 +159,13 @@
             d3.select(this).style("fill", function (d) {
                 const population = populationData.get(d.id) || 0;
                 const hdi = HDIdata.get(d.id) || 0;
+                const temperature = temperatureData.get(d.properties.name) || 0;
 
                 const normalizedPopulation = (population - minPop) / (maxPop - minPop);
-                const normalizedHDI = (hdi - minHDI) / (maxHDI - minHDI);
+                const normalizedHDI = hdi === 0 ? 0 : (hdi - minHDI) / (maxHDI - minHDI);
+                const normalizedTemperature = (temperature - minTemp) / (maxTemp - minTemp);
 
-            // Apply equal weights to normalized values
-                const weightedValue = (weightPop - 0.5*weightHDI) * normalizedPopulation + (weightHDI - 0.5*weightPop) * normalizedHDI;
+                const weightedValue = (weightPop - 0.33*weightHDI - 0.33*weightTemp) * normalizedPopulation + (weightHDI - 0.33*weightPop - 0.33*weightTemp) * normalizedHDI + (weightTemp - 0.33*weightPop - 0.33*weightHDI) * normalizedTemperature;
                 return colorScale(weightedValue);
             });
             tooltip.transition()
