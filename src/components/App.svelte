@@ -27,6 +27,7 @@
 
     let minTemp;
     let maxTemp;
+    let tooltip;
 
 
   
@@ -45,9 +46,12 @@
           .domain([0, 1]) // Define the domain as the range of values your data can take
           .interpolator(d3.interpolateBlues);
     
-        const tooltip = d3.select("body").append("div")
+        tooltip = d3.select("body").append("div")
             .attr("class", "tooltip")
-            .style("opacity", 0);
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("top", "300px") // Adjust the top position as needed
+            .style("left", "20px");;
     
         const [topoData, popData, HDIdataCsv, tempData ] = await Promise.all([
             d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
@@ -68,6 +72,7 @@
         maxPop = d3.max(popData, d => +d.pop);
 
         minTemp = d3.min(tempData, d => +d.Avg_Year);
+        console.log(minTemp);
         maxTemp = d3.max(tempData, d => +d.Avg_Year);
 
         
@@ -90,6 +95,23 @@
             weightTemp = +this.value;
             updateMap(topoData);
         });
+
+        const title = document.createElement('h1');
+        title.textContent = 'Where do you want to live?';
+        title.style.position = 'absolute';
+        title.style.top = '0%';
+        title.style.left = '50%';
+        title.style.transform = 'translate(-50%, -50%)'; // Center the title horizontally and vertically
+        document.body.insertBefore(title, document.body.firstChild);
+
+        const subtitle = document.createElement('h2');
+        subtitle.textContent = 'Adjust the sliders to find the best country for you!';
+        subtitle.style.position = 'absolute';
+        subtitle.style.top = '50px'; // Adjust the top position as needed
+        subtitle.style.left = '50%';
+        subtitle.style.transform = 'translateX(-50%)'; // Center the subtitle horizontally
+        document.body.insertBefore(subtitle, document.body.firstChild);
+
     });
 
     async function loadTemperatureData(data) {
@@ -127,6 +149,8 @@
     function updateMap(topo) {
         svg.selectAll(".country").remove();
 
+        let topCountries = []; // Array to store top countries
+
         svg.selectAll(".country")
             .data(topo.features)
             .enter().append("path")
@@ -143,17 +167,34 @@
 
             const weightedValue = (weightPop - 0.33*weightHDI - 0.33*weightTemp) * normalizedPopulation + (weightHDI - 0.33*weightPop - 0.33*weightTemp) * normalizedHDI + (weightTemp - 0.33*weightPop - 0.33*weightHDI) * normalizedTemperature;
 
+            topCountries.push({ 
+                name: d.properties.name, 
+                weightedValue: weightedValue,
+                hdi: hdi,
+                temperature: temperature,
+                population: population
+            });
+
             return colorScale(weightedValue);
             })
             .on("mouseover", function (d) {
-            const population = populationData.get(d.id) || 0;
-            d3.select(this).style("fill", "#ffab00");
-            tooltip.transition()
-                .duration(200)
-                .style("opacity", .9);
-            tooltip.html("Country: " + d.properties.name + "<br>Population: " + population.toLocaleString())
-                .style("left", (d3.event.pageX + 10) + "px")
-                .style("top", (d3.event.pageY - 28) + "px");
+              d3.select(this).style("fill", function (d) {
+              const population = populationData.get(d.id) || 0;
+              const hdi = HDIdata.get(d.id) || 0;
+              const temperature = temperatureData.get(d.properties.name) || 0;
+              d3.select(this).style("fill", "#ffab00");
+              tooltip.transition()
+                  .duration(200)
+                  .style("opacity", .9);
+              tooltip.html(
+                  `Country: ${d.properties.name}<br>
+                  HDI: ${hdi}<br>
+                  Avg Temp: ${temperature.toFixed(2)}<br>
+                  Population: ${population.toLocaleString()}`
+              )
+                  .style("left", (d3.event.pageX + 10) + "px")
+                  .style("top", (d3.event.pageY - 28) + "px");
+                });
             })
             .on("mouseout", function (d) {
             d3.select(this).style("fill", function (d) {
@@ -172,6 +213,19 @@
                 .duration(500)
                 .style("opacity", 0);
             });
+
+          topCountries.sort((a, b) => b.weightedValue - a.weightedValue);
+
+          // Get the top 5 countries
+          const top5Countries = topCountries.slice(0, 5);
+
+          // Display the top 5 countries with their HDI, average temperature, and population in the div
+          const highestWeightedCountryDiv = document.getElementById("highestWeightedCountry");
+          highestWeightedCountryDiv.innerHTML = "<h3>Top 5 candidate countries:</h3>";
+          top5Countries.forEach(country => {
+              const roundedTemperature = country.temperature.toFixed(2);
+              highestWeightedCountryDiv.innerHTML += `<p>${country.name}, HDI: ${country.hdi}, Avg. Temp: ${roundedTemperature}, Population: ${country.population.toLocaleString()}</p>`;
+          });
         }
 
   </script>
@@ -194,19 +248,19 @@
     
       .slider-container {
         position: absolute;
-        left: 4%;
+        left: 7.5%;
         bottom: 20px;
         width: calc(100% - 40px);
       }
        .slider-container_second {
         position: absolute;
-        left: 28%;
+        left: 37.5%;
         bottom: 20px;
         width: calc(100% - 40px);
       }
         .slider-container_third {
         position: absolute;
-        left: 52%;
+        left: 67.5%;
         bottom: 20px;
         width: calc(100% - 40px);
       }
@@ -218,7 +272,7 @@
       }
     
       .slider {
-        width: 20%;
+        width: 100%;
       }
     
       .country {
@@ -232,35 +286,44 @@
       }
     
       .tooltip {
+          position: absolute;
+          padding: 10px;
+          background: #fff;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.3s;
+          top: 50px; /* Adjust the top position as needed */
+          left: 20px; /* Adjust the left position as needed */
+      }
+
+      .highest-weighted-country {
         position: absolute;
-        padding: 10px;
-        background: #fff;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity 0.3s;
+        top: 20px; /* Adjust the top position as needed */
+        left: 20px; /* Adjust the left position as needed */
+        background-color: white; /* Set the background color */
+        padding: 10px; /* Add padding for better readability */
+        border: 1px solid black; /* Add a border */
+        border-radius: 5px; /* Add border-radius for rounded corners */
       }
     </style>
     
     <svg id="my_dataviz"></svg>
     
-  <div class="slider-container">
-    <p>Weighted Population:</p>
-    <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="weightSlider">
-  </div>
-  
-  <div class="slider-container_second">
-      <p>Second Data Weight:</p>
+    <div class="slider-container" style="width: 25%;">
+      <p>Population:</p>
+      <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="weightSlider">
+    </div>
+    
+    <div class="slider-container_second" style="width: 25%;">
+      <p>HDI:</p>
       <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="secondDataSlider">
-  </div>
-  
-  <div class="slider-container_third">
-      <p>Third Data Weight:</p>
+    </div>
+    
+    <div class="slider-container_third" style="width: 25%;">
+      <p>Average temperature:</p>
       <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="thirdDataSlider">
-  </div>
-  
-  <div class="slider-container_fourth">
-      <p>Fourth Data Weight:</p>
-      <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="ForthDataSlider">
-  </div>
+    </div>
+
+  <div id="highestWeightedCountry" class="highest-weighted-country"></div>
