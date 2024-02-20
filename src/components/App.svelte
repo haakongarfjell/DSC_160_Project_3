@@ -185,7 +185,7 @@
               tooltip.html(
                   `Country: ${d.properties.name}<br>
                   HDI: ${hdi}<br>
-                  Avg Temp: ${temperature.toFixed(2)}<br>
+                  Avg Temp: ${temperature.toFixed(2)} C<br>
                   Population: ${population.toLocaleString()}`
               )
                   .style("left", (d3.event.pageX + 10) + "px")
@@ -218,7 +218,7 @@
           highestWeightedCountryDiv.innerHTML = "<h3>Top 5 candidate countries:</h3>";
           top5Countries.forEach(country => {
               const roundedTemperature = country.temperature.toFixed(2);
-              highestWeightedCountryDiv.innerHTML += `<p>${country.name}, HDI: ${country.hdi}, Avg. Temp: ${roundedTemperature}, Population: ${country.population.toLocaleString()}</p>`;
+              highestWeightedCountryDiv.innerHTML += `<p>${country.name}, HDI: ${country.hdi}, Avg. Temp: ${roundedTemperature} C, Population: ${country.population.toLocaleString()}</p>`;
           });
         }
 
