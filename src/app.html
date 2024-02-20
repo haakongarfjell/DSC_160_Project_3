@@ -1,12 +1,35 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		%sveltekit.head%
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">%sveltekit.body%</div>
-	</body>
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%sveltekit.assets%/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    %sveltekit.head%
+</head>
+<body data-sveltekit-preload-data="hover">
+    <div style="display: contents">
+        %sveltekit.body%
+    </div>
+
+    <div id="writeup">
+        <p> Write-Up: 
+			Our interactive visualization aims to provide a comprehensive understanding of global data by integrating population, HDI (Human Development Index), and average temperature parameters through a map interface. We made deliberate design decisions to enhance user experience and facilitate insightful data exploration.
+			Utilizing color gradients based on the weighted score ensures a quick and visually striking comprehension of the data. The stronger the color, the higher the score for the selected parameters. Three sliders allow users to dynamically adjust the weights assigned to population, HDI, and average temperature, enabling personalized exploration based on their preferences. Users can dynamically adjust the weight sliders, immediately observing the impact on country color intensity, fostering an interactive and exploratory experience.
+			Hovering over a country, changes the color and uses a tooltip to provide detailed information, aiding users in understanding specific data points and fostering a more informed analysis. Initially, we considered bar charts or scatter plots but concluded that a map provides a more intuitive representation of global data. We evaluated dropdown menus for parameter selection but found sliders to be more user-friendly, allowing for a quicker and more dynamic adjustment.
+			The development process spanned approximately 36 person-hours, with a significant portion dedicated to data integration and refining the visualization interface. We started together discussing different ideas. After approximately one to two hours, we had the idea clear and then we split the work into having two starting to work on the development and the last guy looking for datasets. Finding free datasets for population, HDI, and temperature and cleaning the data took longer time than expected. Finding data for HDI was by far the hardest and most time consuming. 
+			When we had found usable and free datasets the rest of the time was used to ensure a seamless and intuitive user experience. This was done together by discussing possible changes and making small adjustments to the code to see if we could improve something. The last couple of hours was spent writing this and cleaning up the code without making any visual changes. 
+			In conclusion, our interactive visualization strives to offer an engaging and informative experience. We had a collaborative development approach where most of the work was done together.
+		</p>
+    </div>
+</body>
+
+<style>
+    #writeup {
+        position: relative;
+        margin-top: 100px;
+        padding: 20px;
+        background-color: #ffffff;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+</style>
 </html>

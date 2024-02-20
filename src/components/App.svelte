@@ -50,7 +50,7 @@
             .attr("class", "tooltip")
             .style("opacity", 0)
             .style("position", "absolute")
-            .style("top", "300px") 
+            .style("top", "520px") 
             .style("left", "20px");
     
         const [topoData, popData, HDIdataCsv, tempData ] = await Promise.all([
@@ -214,11 +214,17 @@
 
           const top5Countries = topCountries.slice(0, 5);
 
-          const highestWeightedCountryDiv = document.getElementById("highestWeightedCountry");
-          highestWeightedCountryDiv.innerHTML = "<h3>Top 5 candidate countries:</h3>";
+          const countryListDiv = document.getElementById("countryList");
+          countryListDiv.innerHTML = "";
           top5Countries.forEach(country => {
-              const roundedTemperature = country.temperature.toFixed(2);
-              highestWeightedCountryDiv.innerHTML += `<p>${country.name}, HDI: ${country.hdi}, Avg. Temp: ${roundedTemperature} C, Population: ${country.population.toLocaleString()}</p>`;
+            const roundedTemperature = country.temperature.toFixed(2);
+            const countryItem = document.createElement("div");
+            countryItem.classList.add("country-item");
+            countryItem.innerHTML = `<h4>${country.name}</h4>
+                                    <div class="country-info">
+                                      HDI: ${country.hdi}, Avg. Temp: ${roundedTemperature} C, Population: ${country.population.toLocaleString()}
+                                    </div>`;
+            countryListDiv.appendChild(countryItem);
           });
         }
 
@@ -293,14 +299,37 @@
       }
 
       .highest-weighted-country {
-        position: absolute;
-        top: 20px; 
-        left: 20px; 
-        background-color: white; 
-        padding: 10px; 
-        border: 1px solid black; 
-        border-radius: 5px; 
-      }
+          position: absolute;
+          top: 20px;
+          left: 20px;
+          background-color: white;
+          padding: 20px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #countryList {
+          margin-top: 10px;
+        }
+
+        .country-item {
+          margin-bottom: 10px;
+          padding: 10px;
+          background-color: #f5f5f5;
+          border-radius: 5px;
+        }
+
+        .country-item h4 {
+          margin: 0;
+          font-size: 16px;
+        }
+
+        .country-info {
+          margin-top: 5px;
+          font-size: 14px;
+          color: #666;
+        }
     </style>
     
     <svg id="my_dataviz"></svg>
@@ -320,4 +349,7 @@
       <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="thirdDataSlider">
     </div>
 
-  <div id="highestWeightedCountry" class="highest-weighted-country"></div>
+    <div id="highestWeightedCountry" class="highest-weighted-country">
+      <h3>Top 5 candidate countries:</h3>
+      <div id="countryList"></div>
+    </div>
