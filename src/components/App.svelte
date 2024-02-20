@@ -43,15 +43,15 @@
         path = d3.geoPath().projection(projection);
     
         colorScale = d3.scaleSequential()
-          .domain([0, 1]) // Define the domain as the range of values your data can take
+          .domain([0, 1]) 
           .interpolator(d3.interpolateBlues);
     
         tooltip = d3.select("body").append("div")
             .attr("class", "tooltip")
             .style("opacity", 0)
             .style("position", "absolute")
-            .style("top", "300px") // Adjust the top position as needed
-            .style("left", "20px");;
+            .style("top", "300px") 
+            .style("left", "20px");
     
         const [topoData, popData, HDIdataCsv, tempData ] = await Promise.all([
             d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
@@ -101,15 +101,15 @@
         title.style.position = 'absolute';
         title.style.top = '0%';
         title.style.left = '50%';
-        title.style.transform = 'translate(-50%, -50%)'; // Center the title horizontally and vertically
+        title.style.transform = 'translate(-50%, -50%)'; 
         document.body.insertBefore(title, document.body.firstChild);
 
         const subtitle = document.createElement('h2');
         subtitle.textContent = 'Adjust the sliders to find the best country for you!';
         subtitle.style.position = 'absolute';
-        subtitle.style.top = '50px'; // Adjust the top position as needed
+        subtitle.style.top = '50px'; 
         subtitle.style.left = '50%';
-        subtitle.style.transform = 'translateX(-50%)'; // Center the subtitle horizontally
+        subtitle.style.transform = 'translateX(-50%)'; 
         document.body.insertBefore(subtitle, document.body.firstChild);
 
     });
@@ -120,23 +120,19 @@
         return null;
       }
 
-      // Group data by country
       const groupedData = data.reduce((acc, currentValue) => {
           const country = currentValue.Country;
           const avgYear = +currentValue.Avg_Year;
 
-          // If the country is not in the accumulator yet, add it
           if (!acc.has(country)) {
               acc.set(country, []);
           }
 
-          // Push the average temperature to the array for the country
           acc.get(country).push(avgYear);
 
           return acc;
       }, new Map());
 
-      // Calculate the average temperature for each country
       const selectedData = new Map();
       groupedData.forEach((temperatures, country) => {
           const avgTemperature = temperatures.reduce((total, temp) => total + temp, 0) / temperatures.length;
@@ -149,7 +145,7 @@
     function updateMap(topo) {
         svg.selectAll(".country").remove();
 
-        let topCountries = []; // Array to store top countries
+        let topCountries = [];
 
         svg.selectAll(".country")
             .data(topo.features)
@@ -216,10 +212,8 @@
 
           topCountries.sort((a, b) => b.weightedValue - a.weightedValue);
 
-          // Get the top 5 countries
           const top5Countries = topCountries.slice(0, 5);
 
-          // Display the top 5 countries with their HDI, average temperature, and population in the div
           const highestWeightedCountryDiv = document.getElementById("highestWeightedCountry");
           highestWeightedCountryDiv.innerHTML = "<h3>Top 5 candidate countries:</h3>";
           top5Countries.forEach(country => {
@@ -294,18 +288,18 @@
           pointer-events: none;
           opacity: 0;
           transition: opacity 0.3s;
-          top: 50px; /* Adjust the top position as needed */
-          left: 20px; /* Adjust the left position as needed */
+          top: 50px; 
+          left: 20px; 
       }
 
       .highest-weighted-country {
         position: absolute;
-        top: 20px; /* Adjust the top position as needed */
-        left: 20px; /* Adjust the left position as needed */
-        background-color: white; /* Set the background color */
-        padding: 10px; /* Add padding for better readability */
-        border: 1px solid black; /* Add a border */
-        border-radius: 5px; /* Add border-radius for rounded corners */
+        top: 20px; 
+        left: 20px; 
+        background-color: white; 
+        padding: 10px; 
+        border: 1px solid black; 
+        border-radius: 5px; 
       }
     </style>
     
